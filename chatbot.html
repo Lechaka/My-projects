@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Your Smart Companion</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .ai-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #4ade80;
+            border-radius: 50%;
+            border: 2px solid white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .header-info h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .header-info p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #f8fafc;
+        }
+        
+        .message {
+            display: flex;
+            gap: 15px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .message-content {
+            flex: 1;
+        }
+        
+        .message-bubble {
+            padding: 15px 20px;
+            border-radius: 18px;
+            font-size: 1rem;
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .message.ai .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 8px;
+            text-align: right;
+        }
+        
+        .message.user .message-time {
+            text-align: left;
+            color: #94a3b8;
+        }
+        
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 0;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 18px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+        
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+        
+        /* Input Area */
+        .chat-input-area {
+            padding: 25px 30px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .chat-input {
+            width: 100%;
+            min-height: 50px;
+            max-height: 120px;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        
+        .chat-input:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-actions {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .input-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+        
+        .input-btn:hover {
+            background: #f1f5f9;
+            color: #667eea;
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-action {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-action:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .welcome-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            max-width: 500px;
+        }
+        
+        .suggestion-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .suggestion-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .suggestion-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+        
+        .suggestion-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .suggestion-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        
+        .suggestion-desc {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .chat-container {
+                height: 95vh;
+                border-radius: 15px;
+            }
+            
+            .chat-header {
+                padding: 20px;
+            }
+            
+            .chat-messages {
+                padding: 20px;
+            }
+            
+            .chat-input-area {
+                padding: 20px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .suggestion-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                justify-content: center;
+            }
+        }
+        
+        /* Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-left">
+                <div class="ai-avatar">
+                    🤖
+                    <div class="status-indicator"></div>
+                </div>
+                <div class="header-info">
+                    <h1>AI Assistant</h1>
+                    <p id="statusText">Online • Ready to help</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="chatbot.clearChat()" title="Clear Chat">🗑️</button>
+                <button class="header-btn" onclick="chatbot.toggleTheme()" title="Toggle Theme">🌙</button>
+                <button class="header-btn" onclick="chatbot.exportChat()" title="Export Chat">📤</button>
+            </div>
+        </div>
+        
+        <!-- Messages Area -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">🤖</div>
+                <h2 class="welcome-title">Hello! I'm your AI Assistant</h2>
+                <p class="welcome-subtitle">I'm here to help you with questions, creative tasks, problem-solving, and much more. What would you like to explore today?</p>
+                
+                <div class="suggestion-cards">
+                    <div class="suggestion-card" onclick="chatbot.sendSuggestion('Explain quantum computing in simple terms')">
+                        <div class="suggestion-icon">🔬</div>
+                        <div class="suggestion-title">Science & Tech</div>
+                        <div class="suggestion-desc">Learn about complex topics</div>
+                    </div>
+                    <div class="suggestion-card" onclick="chatbot.sendSuggestion('Write a creative story about space exploration')">
+                        <div class="suggestion-icon">✍️</div>
+                        <div class="suggestion-title">Creative Writing</div>
+                        <div class="suggestion-desc">Generate stories and content</div>
+                    </div>
+                    <div class="suggestion-card" onclick="chatbot.sendSuggestion('Help me plan a healthy weekly meal plan')">
+                        <div class="suggestion-icon">🍽️</div>
+                        <div class="suggestion-title">Life Planning</div>
+                        <div class="suggestion-desc">Organize and plan better</div>
+                    </div>
+                    <div class="suggestion-card" onclick="chatbot.sendSuggestion('Solve this math problem: What is 15% of 240?')">
+                        <div class="suggestion-icon">🧮</div>
+                        <div class="suggestion-title">Problem Solving</div>
+                        <div class="suggestion-desc">Math, logic, and analysis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="chat-input-area">
+            <div class="quick-actions" id="quickActions">
+                <div class="quick-action" onclick="chatbot.sendSuggestion('What can you help me with?')">💡 What can you do?</div>
+                <div class="quick-action" onclick="chatbot.sendSuggestion('Tell me a fun fact')">🎯 Fun fact</div>
+                <div class="quick-action" onclick="chatbot.sendSuggestion('Help me brainstorm ideas')">🧠 Brainstorm</div>
+                <div class="quick-action" onclick="chatbot.sendSuggestion('Explain something complex')">📚 Explain</div>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        class="chat-input" 
+                        id="chatInput" 
+                        placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+                        rows="1"
+                    ></textarea>
+                    <div class="input-actions">
+                        <button class="input-btn" onclick="chatbot.attachFile()" title="Attach File">📎</button>
+                        <button class="input-btn" onclick="chatbot.toggleVoice()" title="Voice Input">🎤</button>
+                    </div>
+                </div>
+                <button class="send-btn" id="sendBtn" onclick="chatbot.sendMessage()">
+                    <span>Send</span>
+                    <span>🚀</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AIChatbot {
+            constructor() {
+                this.messages = [];
+                this.isTyping = false;
+                this.conversationStarted = false;
+                
+                // AI response templates and knowledge base
+                this.responses = {
+                    greetings: [
+                        "Hello! I'm excited to help you today. What's on your mind?",
+                        "Hi there! I'm here and ready to assist. What can I help you with?",
+                        "Hey! Great to see you. How can I make your day better?",
+                        "Hello! I'm your AI assistant, ready to tackle any questions or tasks you have!"
+                    ],
+                    
+                    capabilities: [
+                        "I can help you with a wide range of tasks! Here's what I'm great at:\n\n🧠 **Problem Solving** - Math, logic puzzles, troubleshooting\n📝 **Writing & Creativity** - Stories, poems, essays, brainstorming\n📚 **Learning & Explanation** - Complex topics made simple\n🗓️ **Planning & Organization** - Schedules, to-do lists, project planning\n💡 **Ideas & Innovation** - Creative solutions and fresh perspectives\n🔍 **Research & Analysis** - Information gathering and insights\n\nWhat interests you most?"
+                    ],
+                    
+                    funFacts: [
+                        "🐙 Did you know octopuses have three hearts and blue blood? Two hearts pump blood to the gills, while the third pumps blood to the rest of the body!",
+                        "🌟 A single teaspoon of neutron star material would weigh about 6 billion tons - that's like compressing Mount Everest into a sugar cube!",
+                        "🧠 Your brain uses about 20% of your body's total energy, even though it only weighs about 2% of your body weight!",
+                        "🦋 Butterflies taste with their feet and smell with their antennae. They can see ultraviolet patterns on flowers that are invisible to humans!",
+                        "🌍 If you could fold a piece of paper in half 42 times, it would reach the moon! Each fold doubles the thickness exponentially."
+                    ],
+                    
+                    creative: [
+                        "I love creative challenges! Whether it's writing stories, brainstorming business ideas, creating poems, or designing solutions - creativity is where I shine. What kind of creative project are you working on?",
+                        "Creativity is one of my favorite areas! I can help with storytelling, character development, plot ideas, marketing concepts, artistic inspiration, or any creative problem-solving. What's your creative vision?"
+                    ],
+                    
+                    science: {
+                        quantum: "Quantum computing is like having a magical computer that can be in multiple states at once! 🌟\n\nImagine a regular computer bit is like a coin that's either heads (1) or tails (0). A quantum bit (qubit) is like a spinning coin - it's both heads AND tails until you catch it!\n\nThis allows quantum computers to:\n• Try millions of solutions simultaneously\n• Solve certain problems exponentially faster\n• Break current encryption (but also create unbreakable new ones)\n• Simulate molecular behavior for drug discovery\n\nWe're still in the early days, but it's like going from candles to electricity! 💡",
+                        
+                        space: "Space exploration is humanity's greatest adventure! 🚀\n\nSome mind-blowing facts:\n• We've only explored about 5% of our own oceans, yet we're reaching for Mars!\n• The International Space Station travels at 17,500 mph\n• A day on Venus is longer than its year\n• There are more possible games of chess than atoms in the observable universe\n\nWhat aspect of space fascinates you most? The physics, the exploration, or the possibility of life elsewhere?"
+                    },
+                    
+                    fallbacks: [
+                        "That's a fascinating question! Let me think about this from a few different angles...",
+                        "Interesting topic! I'd love to explore this with you. Could you tell me a bit more about what specifically interests you?",
+                        "Great question! This touches on several important concepts. Let me break it down for you...",
+                        "I find this really intriguing! There are multiple ways to approach this - what perspective would be most helpful for you?"
+                    ]
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.adjustTextareaHeight();
+                this.loadChatHistory();
+            }
+            
+            setupEventListeners() {
+                const chatInput = document.getElementById('chatInput');
+                const sendBtn = document.getElementById('sendBtn');
+                
+                chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                chatInput.addEventListener('input', () => {
+                    this.adjustTextareaHeight();
+                    this.updateSendButton();
+                });
+                
+                // Auto-resize textarea
+                chatInput.addEventListener('input', this.adjustTextareaHeight);
+            }
+            
+            adjustTextareaHeight() {
+                const textarea = document.getElementById('chatInput');
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            }
+            
+            updateSendButton() {
+                const chatInput = document.getElementById('chatInput');
+                const sendBtn = document.getElementById('sendBtn');
+                const hasText = chatInput.value.trim().length > 0;
+                
+                sendBtn.disabled = !hasText || this.isTyping;
+                sendBtn.style.opacity = hasText && !this.isTyping ? '1' : '0.5';
+            }
+            
+            sendMessage() {
+                const chatInput = document.getElementById('chatInput');
+                const message = chatInput.value.trim();
+                
+                if (!message || this.isTyping) return;
+                
+                // Hide welcome screen on first message
+                if (!this.conversationStarted) {
+                    document.getElementById('welcomeScreen').style.display = 'none';
+                    this.conversationStarted = true;
+                }
+                
+                // Add user message
+                this.addMessage(message, 'user');
+                chatInput.value = '';
+                this.adjustTextareaHeight();
+                this.updateSendButton();
+                
+                // Show typing indicator and generate response
+                this.showTypingIndicator();
+                setTimeout(() => {
+                    this.generateAIResponse(message);
+                }, 1000 + Math.random() * 2000); // Realistic typing delay
+            }
+            
+            sendSuggestion(suggestion) {
+                document.getElementById('chatInput').value = suggestion;
+                this.sendMessage();
+            }
+            
+            addMessage(content, sender) {
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        ${sender === 'ai' ? '🤖' : '👤'}
+                    </div>
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            ${this.formatMessage(content)}
+                        </div>
+                        <div class="message-time">${timeString}</div>
+                    </div>
+                `;
+                
+                messagesContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                // Save message
+                this.messages.push({
+                    content,
+                    sender,
+                    timestamp: now.toISOString()
+                });
+                
+                this.saveChatHistory();
+            }
+            
+            formatMessage(content) {
+                // Convert markdown-like formatting to HTML
+                return content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/`(.*?)`/g, '<code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>');
+            }
+            
+            showTypingIndicator() {
+                this.isTyping = true;
+                this.updateSendButton();
+                this.updateStatus('Typing...');
+                
+                const messagesContainer = document.getElementById('chatMessages');
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message ai typing-indicator';
+                typingDiv.id = 'typingIndicator';
+                
+                typingDiv.innerHTML = `
+                    <div class="message-avatar">🤖</div>
+                    <div class="typing-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                `;
+                
+                messagesContainer.appendChild(typingDiv);
+                this.scrollToBottom();
+            }
+            
+            hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+                this.isTyping = false;
+                this.updateSendButton();
+                this.updateStatus('Online • Ready to help');
+            }
+            
+            generateAIResponse(userMessage) {
+                const message = userMessage.toLowerCase();
+                let response = '';
+                
+                // Greeting detection
+                if (this.isGreeting(message)) {
+                    response = this.getRandomResponse(this.responses.greetings);
+                }
+                // Capabilities inquiry
+                else if (message.includes('what can you') || message.includes('what do you') || message.includes('help me with')) {
+                    response = this.responses.capabilities[0];
+                }
+                // Fun facts
+                else if (message.includes('fun fact') || message.includes('interesting fact')) {
+                    response = this.getRandomResponse(this.responses.funFacts);
+                }
+                // Science topics
+                else if (message.includes('quantum')) {
+                    response = this.responses.science.quantum;
+                }
+                else if (message.includes('space') || message.includes('universe') || message.includes('planet')) {
+                    response = this.responses.science.space;
+                }
+                // Creative requests
+                else if (message.includes('creative') || message.includes('story') || message.includes('write') || message.includes('brainstorm')) {
+                    response = this.getRandomResponse(this.responses.creative);
+                }
+                // Math problems
+                else if (this.isMathProblem(message)) {
+                    response = this.solveMathProblem(message);
+                }
+                // Planning requests
+                else if (message.includes('plan') || message.includes('schedule') || message.includes('organize')) {
+                    response = this.generatePlanningResponse(message);
+                }
+                // Default responses
+                else {
+                    response = this.generateContextualResponse(message);
+                }
+                
+                this.hideTypingIndicator();
+                this.addMessage(response, 'ai');
+            }
+            
+            isGreeting(message) {
+                const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'];
+                return greetings.some(greeting => message.includes(greeting));
+            }
+            
+            isMathProblem(message) {
+                return /\d+[\+\-\*\/\%]\d+/.test(message) || 
+                       message.includes('calculate') || 
+                       message.includes('what is') && /\d/.test(message);
+            }
+            
+            solveMathProblem(message) {
+                // Simple math problem solver
+                if (message.includes('15% of 240')) {
+                    return "Great math question! 🧮\n\nTo find 15% of 240:\n15% = 15/100 = 0.15\n240 × 0.15 = **36**\n\nSo 15% of 240 is **36**!\n\nWould you like me to explain percentage calculations or help with another math problem?";
+                }
+                
+                // Extract and solve basic arithmetic
+                const mathMatch = message.match(/(\d+)\s*([\+\-\*\/])\s*(\d+)/);
+                if (mathMatch) {
+                    const [, num1, operator, num2] = mathMatch;
+                    const a = parseFloat(num1);
+                    const b = parseFloat(num2);
+                    let result;
+                    
+                    switch (operator) {
+                        case '+': result = a + b; break;
+                        case '-': result = a - b; break;
+                        case '*': result = a * b; break;
+                        case '/': result = b !== 0 ? a / b : 'undefined (division by zero)'; break;
+                    }
+                    
+                    return `🧮 **Math Solution:**\n\n${a} ${operator} ${b} = **${result}**\n\nNeed help with more calculations or want me to explain the steps?`;
+                }
+                
+                return "I'd be happy to help with math! 🧮 Could you provide the specific calculation or problem you'd like me to solve?";
+            }
+            
+            generatePlanningResponse(message) {
+                if (message.includes('meal') || message.includes('food')) {
+                    return "🍽️ **Healthy Weekly Meal Plan**\n\n**Monday:**\n• Breakfast: Greek yogurt with berries\n• Lunch: Quinoa salad with vegetables\n• Dinner: Grilled salmon with roasted vegetables\n\n**Tuesday:**\n• Breakfast: Oatmeal with nuts and fruit\n• Lunch: Chicken and avocado wrap\n• Dinner: Vegetable stir-fry with brown rice\n\n**Wednesday:**\n• Breakfast: Smoothie bowl with spinach and banana\n• Lunch: Lentil soup with whole grain bread\n• Dinner: Baked chicken with sweet potato\n\n*Would you like me to continue with the rest of the week or adjust for any dietary preferences?*";
+                }
+                
+                return "I'd love to help you plan! 📋 Whether it's meal planning, daily schedules, project timelines, or goal setting - I can create structured plans tailored to your needs. What specifically would you like to organize?";
+            }
+            
+            generateContextualResponse(message) {
+                // Analyze message for context and generate appropriate response
+                if (message.includes('explain') || message.includes('how does') || message.includes('what is')) {
+                    return `That's a great question! 🤔 I'd love to explain this topic thoroughly. To give you the most helpful explanation, could you tell me:\n\n• What's your current level of familiarity with this topic?\n• Are you looking for a simple overview or detailed explanation?\n• Is this for a specific purpose (work, study, curiosity)?\n\nThis will help me tailor my explanation perfectly for you!`;
+                }
+                
+                if (message.includes('help') || message.includes('assist')) {
+                    return `Absolutely! I'm here to help. 💪 I can assist with:\n\n🧠 **Problem-solving** - Breaking down complex issues\n📝 **Writing & Communication** - From emails to creative content\n📊 **Analysis & Research** - Data interpretation and insights\n🎯 **Decision-making** - Weighing pros and cons\n💡 **Creative thinking** - Fresh perspectives and ideas\n\nWhat challenge are you facing that I can help tackle?`;
+                }
+                
+                return this.getRandomResponse(this.responses.fallbacks);
+            }
+            
+            getRandomResponse(responses) {
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+            
+            updateStatus(status) {
+                document.getElementById('statusText').textContent = status;
+            }
+            
+            scrollToBottom() {
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
+            clearChat() {
+                if (confirm('Are you sure you want to clear the chat history?')) {
+                    document.getElementById('chatMessages').innerHTML = '';
+                    document.getElementById('welcomeScreen').style.display = 'flex';
+                    this.messages = [];
+                    this.conversationStarted = false;
+                    this.saveChatHistory();
+                    this.showNotification('Chat cleared! 🗑️');
+                }
+            }
+            
+            exportChat() {
+                if (this.messages.length === 0) {
+                    this.showNotification('No messages to export! 📭');
+                    return;
+                }
+                
+                const chatData = {
+                    exportDate: new Date().toISOString(),
+                    messageCount: this.messages.length,
+                    messages: this.messages
+                };
+                
+                const dataStr = JSON.stringify(chatData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `ai-chat-export-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                this.showNotification('Chat exported successfully! 📤');
+            }
+            
+            toggleTheme() {
+                // Simple theme toggle (could be expanded)
+                document.body.classList.toggle('dark-theme');
+                this.showNotification('Theme toggled! 🌙');
+            }
+            
+            attachFile() {
+                this.showNotification('File attachment feature coming soon! 📎');
+            }
+            
+            toggleVoice() {
+                this.showNotification('Voice input feature coming soon! 🎤');
+            }
+            
+            saveChatHistory() {
+                localStorage.setItem('aiChatHistory', JSON.stringify(this.messages));
+            }
+            
+            loadChatHistory() {
+                const saved = localStorage.getItem('aiChatHistory');
+                if (saved) {
+                    this.messages = JSON.parse(saved);
+                    if (this.messages.length > 0) {
+                        document.getElementById('welcomeScreen').style.display = 'none';
+                        this.conversationStarted = true;
+                        
+                        // Restore messages
+                        this.messages.forEach(msg => {
+                            this.addMessageToDOM(msg.content, msg.sender, new Date(msg.timestamp));
+                        });
+                    }
+                }
+            }
+            
+            addMessageToDOM(content, sender, timestamp) {
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        ${sender === 'ai' ? '🤖' : '👤'}
+                    </div>
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            ${this.formatMessage(content)}
+                        </div>
+                        <div class="message-time">${timeString}</div>
+                    </div>
+                `;
+                
+                messagesContainer.appendChild(messageDiv);
+            }
+            
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 10px;
+                    font-weight: 500;
+                    z-index: 1001;
+                    animation: slideInRight 0.3s ease;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                `;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+        }
+        
+        // Add notification animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Initialize the chatbot
+        const chatbot = new AIChatbot();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c5d499b60895fb',t:'MTc1NzQxMTk0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

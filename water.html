@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underwater Ecosystem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: linear-gradient(180deg, #003d5c 0%, #001f3f 50%, #000814 100%);
+            font-family: 'Arial', sans-serif;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .light-rays {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(180deg, 
+                    rgba(100, 200, 255, 0.1) 0%, 
+                    transparent 30%);
+            pointer-events: none;
+            animation: shimmer 8s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+        
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .title {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #4dd0e1;
+            font-size: 2.8rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(77, 208, 225, 0.8),
+                         0 0 40px rgba(77, 208, 225, 0.5);
+            letter-spacing: 3px;
+            animation: wave 3s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: translateX(-50%) translateY(0px); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 100px;
+            right: 30px;
+            background: rgba(0, 50, 80, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(77, 208, 225, 0.4);
+            color: #4dd0e1;
+            font-size: 0.9rem;
+            min-width: 220px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .info-item {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .label {
+            color: rgba(255, 255, 255, 0.7);
+            margin-right: 15px;
+        }
+        
+        .value {
+            color: #4dd0e1;
+            font-weight: bold;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            text-align: center;
+            background: rgba(0, 50, 80, 0.8);
+            padding: 15px 35px;
+            border-radius: 15px;
+            border: 2px solid rgba(77, 208, 225, 0.4);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-item {
+            margin: 5px 0;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(77, 208, 225, 0.3));
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float-up 6s linear infinite;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="light-rays"></div>
+        <canvas id="canvas"></canvas>
+        
+        <div class="ui-overlay">
+            <div class="title">🌊 OCEAN DEPTHS 🌊</div>
+            
+            <div class="info-panel">
+                <div class="info-item">
+                    <span class="label">🐠 Fish:</span>
+                    <span class="value" id="fishCount">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">🪸 Coral:</span>
+                    <span class="value" id="coralCount">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">🫧 Bubbles:</span>
+                    <span class="value" id="bubbleCount">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">🌡️ Depth:</span>
+                    <span class="value" id="depth">50m</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">💨 Current:</span>
+                    <span class="value" id="current">Gentle</span>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-item">🖱️ <strong>CLICK</strong> to create ripples • <strong>MOVE</strong> mouse to interact</div>
+                <div class="control-item">Experience the tranquil beauty of ocean life</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('container');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        let fish = [];
+        let coral = [];
+        let seaweed = [];
+        let particles = [];
+        let ripples = [];
+        let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+        let bubbleElements = [];
+        
+        class Fish {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height * 0.7 + 100;
+                this.size = Math.random() * 20 + 15;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.hue = Math.random() * 60 + 180;
+                this.direction = this.speedX > 0 ? 1 : -1;
+                this.wiggle = Math.random() * Math.PI * 2;
+            }
+            
+            update() {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 150) {
+                    this.speedX -= dx * 0.0001;
+                    this.speedY -= dy * 0.0001;
+                }
+                
+                this.x += this.speedX;
+                this.y += this.speedY + Math.sin(this.wiggle) * 0.5;
+                this.wiggle += 0.05;
+                
+                this.direction = this.speedX > 0 ? 1 : -1;
+                
+                if (this.x < -50) this.x = canvas.width + 50;
+                if (this.x > canvas.width + 50) this.x = -50;
+                if (this.y < 50) this.y = 50;
+                if (this.y > canvas.height - 150) this.y = canvas.height - 150;
+                
+                this.speedX *= 0.99;
+                this.speedY *= 0.99;
+                
+                if (Math.abs(this.speedX) < 0.5) {
+                    this.speedX += (Math.random() - 0.5) * 0.2;
+                }
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                if (this.direction < 0) ctx.scale(-1, 1);
+                
+                // Body
+                ctx.fillStyle = `hsl(${this.hue}, 70%, 60%)`;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size, this.size * 0.6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(-this.size, 0);
+                ctx.quadraticCurveTo(-this.size * 1.5, -this.size * 0.5, -this.size * 1.8, 0);
+                ctx.quadraticCurveTo(-this.size * 1.5, this.size * 0.5, -this.size, 0);
+                ctx.fillStyle = `hsl(${this.hue}, 60%, 50%)`;
+                ctx.fill();
+                
+                // Eye
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(this.size * 0.4, -this.size * 0.2, this.size * 0.1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Fins
+                ctx.fillStyle = `hsl(${this.hue}, 60%, 55%)`;
+                ctx.beginPath();
+                ctx.ellipse(0, this.size * 0.5, this.size * 0.3, this.size * 0.4, Math.PI * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
+        class Coral {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.branches = Math.floor(Math.random() * 3) + 3;
+                this.height = Math.random() * 50 + 30;
+                this.hue = Math.random() * 40 + 320;
+                this.sway = Math.random() * Math.PI * 2;
+            }
+            
+            draw() {
+                this.sway += 0.02;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                for (let i = 0; i < this.branches; i++) {
+                    let angle = (Math.PI / this.branches) * i - Math.PI / 2;
+                    let branchHeight = this.height * (0.6 + Math.random() * 0.4);
+                    
+                    ctx.strokeStyle = `hsl(${this.hue}, 80%, 60%)`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    
+                    for (let j = 0; j < branchHeight; j += 5) {
+                        let swayOffset = Math.sin(this.sway + j * 0.1) * 2;
+                        let x = Math.cos(angle) * j + swayOffset;
+                        let y = -j;
+                        ctx.lineTo(x, y);
+                    }
+                    
+                    ctx.stroke();
+                    
+                    // Add polyps
+                    for (let k = 0; k < branchHeight; k += 10) {
+                        let x = Math.cos(angle) * k + Math.sin(this.sway + k * 0.1) * 2;
+                        let y = -k;
+                        ctx.fillStyle = `hsl(${this.hue + 20}, 90%, 70%)`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        class Seaweed {
+            constructor(x) {
+                this.x = x;
+                this.y = canvas.height - 50;
+                this.height = Math.random() * 100 + 80;
+                this.segments = 15;
+                this.sway = Math.random() * Math.PI * 2;
+                this.swaySpeed = Math.random() * 0.02 + 0.01;
+            }
+            
+            draw() {
+                this.sway += this.swaySpeed;
+                ctx.strokeStyle = 'rgba(34, 139, 34, 0.7)';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                
+                for (let i = 1; i <= this.segments; i++) {
+                    let segmentHeight = (this.height / this.segments) * i;
+                    let swayAmount = Math.sin(this.sway + i * 0.3) * (i * 2);
+                    ctx.lineTo(this.x + swayAmount, this.y - segmentHeight);
+                }
+                
+                ctx.stroke();
+            }
+        }
+        
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.life = 1;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life -= 0.01;
+            }
+            
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.life * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        class Ripple {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 0;
+                this.maxRadius = 100;
+                this.alpha = 1;
+            }
+            
+            update() {
+                this.radius += 3;
+                this.alpha -= 0.02;
+            }
+            
+            draw() {
+                ctx.strokeStyle = `rgba(77, 208, 225, ${this.alpha * 0.5})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+        
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 20 + 10;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = Math.random() * window.innerWidth + 'px';
+            bubble.style.bottom = '-50px';
+            bubble.style.animationDuration = (Math.random() * 4 + 4) + 's';
+            bubble.style.animationDelay = Math.random() * 2 + 's';
+            
+            container.appendChild(bubble);
+            bubbleElements.push(bubble);
+            
+            setTimeout(() => {
+                bubble.remove();
+                bubbleElements = bubbleElements.filter(b => b !== bubble);
+            }, 8000);
+        }
+        
+        function init() {
+            // Create fish
+            for (let i = 0; i < 25; i++) {
+                fish.push(new Fish());
+            }
+            
+            // Create coral
+            for (let i = 0; i < 15; i++) {
+                coral.push(new Coral(
+                    Math.random() * canvas.width,
+                    canvas.height - Math.random() * 100 - 50
+                ));
+            }
+            
+            // Create seaweed
+            for (let i = 0; i < 20; i++) {
+                seaweed.push(new Seaweed(Math.random() * canvas.width));
+            }
+            
+            document.getElementById('fishCount').textContent = fish.length;
+            document.getElementById('coralCount').textContent = coral.length;
+            
+            setInterval(createBubble, 800);
+        }
+        
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 31, 63, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw seaweed
+            seaweed.forEach(s => s.draw());
+            
+            // Draw coral
+            coral.forEach(c => c.draw());
+            
+            // Update and draw fish
+            fish.forEach(f => {
+                f.update();
+                f.draw();
+            });
+            
+            // Update and draw particles
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            
+            // Update and draw ripples
+            ripples = ripples.filter(r => r.alpha > 0);
+            ripples.forEach(r => {
+                r.update();
+                r.draw();
+            });
+            
+            document.getElementById('bubbleCount').textContent = bubbleElements.length;
+            
+            requestAnimationFrame(animate);
+        }
+        
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        
+        canvas.addEventListener('click', (e) => {
+            ripples.push(new Ripple(e.clientX, e.clientY));
+            
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(e.clientX, e.clientY));
+            }
+        });
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        init();
+        animate();
+    </script>
+</body>
+</html>
